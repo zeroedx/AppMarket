@@ -130,13 +130,6 @@
     <string name="filter_reservation_apps">Remove pre-order apps</string>
     <string name="filter_reservation_apps_summary">Applies to the current search source. Hide unreleased pre-order apps.</string>
     <string name="strip_name_subtitle">Simplify app names</string>
-    <string name="language">Language</string>
-    <string name="language_summary">Application display language</string>
-    <string name="language_system">System default</string>
-    <string name="language_zh_tw">Chinese (Taiwan)</string>
-    <string name="language_zh_hk">Chinese (Hong Kong)</string>
-    <string name="language_zh_cn">Chinese Simplified</string>
-    <string name="language_en">English</string>
     <string name="strip_name_subtitle_summary">Remove promotional text from app names; parts of the actual name may be removed by mistake.</string>
     <string name="clipboard_link_detect">Detect store links in clipboard</string>
     <string name="clipboard_link_detect_summary">Offer to open a store link found in the clipboard when you launch the app</string>

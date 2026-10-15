@@ -12,7 +12,6 @@ object ThemePreferenceKeys {
     val NavRailExpanded = BooleanPreferenceKey(NS, "nav_rail_expanded")
     val EnablePredictiveBack = BooleanPreferenceKey(NS, "enable_predictive_back")
     val PageScale = StringPreferenceKey(NS, "page_scale")
-    val AppLanguage = StringPreferenceKey(NS, "app_language")
     val ColorMode = StringPreferenceKey(NS, "color_mode")
     val ColorSource = StringPreferenceKey(NS, "color_source")
     val SeedColor = StringPreferenceKey(NS, "seed_color")

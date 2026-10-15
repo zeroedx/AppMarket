@@ -131,13 +131,6 @@
     <string name="filter_reservation_apps">去除预约应用</string>
     <string name="filter_reservation_apps_summary">对当前搜索来源生效，隐藏尚未上线的预约应用</string>
     <string name="strip_name_subtitle">优化应用名称</string>
-    <string name="language">语言</string>
-    <string name="language_summary">应用显示语言</string>
-    <string name="language_system">跟随系统</string>
-    <string name="language_zh_tw">繁体中文（台湾）</string>
-    <string name="language_zh_hk">繁体中文（香港）</string>
-    <string name="language_zh_cn">简体中文</string>
-    <string name="language_en">English</string>
     <string name="strip_name_subtitle_summary">清理应用名称中的推广语，可能出现误裁</string>
     <string name="clipboard_link_detect">识别剪贴板里的商店链接</string>
     <string name="clipboard_link_detect_summary">进入应用时，如果剪贴板里有商店链接，会问你要不要打开</string>

@@ -16,7 +16,6 @@ interface ThemePreferencesRepository {
     val navRailExpanded: StateFlow<Boolean>
     val enablePredictiveBack: StateFlow<Boolean>
     val pageScale: StateFlow<Float>
-    val appLanguage: StateFlow<String?>
     val colorMode: StateFlow<ThemeColorMode>
     val colorSource: StateFlow<ThemeColorSource>
     val seedColor: StateFlow<Long?>
@@ -31,7 +30,6 @@ interface ThemePreferencesRepository {
     suspend fun setNavRailExpanded(value: Boolean)
     suspend fun setEnablePredictiveBack(value: Boolean)
     suspend fun setPageScale(value: Float)
-    suspend fun setAppLanguage(value: String?)
     suspend fun setColorMode(value: ThemeColorMode)
     suspend fun setColorSource(value: ThemeColorSource)
     suspend fun setSeedColor(value: Long?)

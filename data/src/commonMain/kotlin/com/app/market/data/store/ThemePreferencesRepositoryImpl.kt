@@ -39,8 +39,6 @@ internal class ThemePreferencesRepositoryImpl(
     override val enablePredictiveBack: StateFlow<Boolean> = _enablePredictiveBack.asStateFlow()
     private val _pageScale = MutableStateFlow(1f)
     override val pageScale: StateFlow<Float> = _pageScale.asStateFlow()
-    private val _appLanguage = MutableStateFlow<String?>(null)
-    override val appLanguage: StateFlow<String?> = _appLanguage.asStateFlow()
     private val _colorMode = MutableStateFlow(ThemeColorMode.SYSTEM)
     override val colorMode: StateFlow<ThemeColorMode> = _colorMode.asStateFlow()
     private val _colorSource = MutableStateFlow(ThemeColorSource.DEFAULT)
@@ -75,9 +73,6 @@ internal class ThemePreferencesRepositoryImpl(
             },
             observe("pageScale", preferences.observe(ThemePreferenceKeys.PageScale)) {
                 _pageScale.value = it?.toFloatOrNull()?.coerceIn(0.8f, 1.1f) ?: 1f
-            },
-            observe("appLanguage", preferences.observe(ThemePreferenceKeys.AppLanguage)) {
-                _appLanguage.value = it?.takeIf(String::isNotBlank)
             },
             observe("colorMode", preferences.observe(ThemePreferenceKeys.ColorMode)) {
                 _colorMode.value = ThemeColorMode.fromKey(it)
@@ -141,14 +136,6 @@ internal class ThemePreferencesRepositoryImpl(
 
     override suspend fun setPageScale(value: Float) =
         preferences.put(ThemePreferenceKeys.PageScale, value.coerceIn(0.8f, 1.1f).toString())
-
-    override suspend fun setAppLanguage(value: String?) {
-        if (value.isNullOrBlank()) {
-            preferences.remove(ThemePreferenceKeys.AppLanguage)
-        } else {
-            preferences.put(ThemePreferenceKeys.AppLanguage, value)
-        }
-    }
 
     override suspend fun setColorMode(value: ThemeColorMode) =
         preferences.put(ThemePreferenceKeys.ColorMode, value.key)
