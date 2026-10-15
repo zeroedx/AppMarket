@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
@@ -14,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.market.domain.model.market.AppSource
 import com.app.market.domain.model.preference.HomePage
+import com.app.market.domain.repository.ThemePreferencesRepository
 import com.app.market.resources.Res
 import com.app.market.resources.about
 import com.app.market.resources.about_summary
@@ -40,6 +43,13 @@ import com.app.market.resources.installer_delta_update
 import com.app.market.resources.installer_delta_update_summary
 import com.app.market.resources.installer_section
 import com.app.market.resources.installer_section_summary
+import com.app.market.resources.language
+import com.app.market.resources.language_en
+import com.app.market.resources.language_summary
+import com.app.market.resources.language_system
+import com.app.market.resources.language_zh_cn
+import com.app.market.resources.language_zh_hk
+import com.app.market.resources.language_zh_tw
 import com.app.market.resources.manual_update
 import com.app.market.resources.manual_update_summary
 import com.app.market.resources.nav_search
@@ -81,6 +91,9 @@ import com.app.market.ui.component.SectionTitle
 import com.app.market.ui.util.appSourceLabel
 import com.app.market.viewmodel.InstallerSettingsViewModel
 import com.app.market.viewmodel.UpdatesViewModel
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.koin.compose.koinInject
 import org.jetbrains.compose.resources.stringResource
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -116,6 +129,9 @@ fun SettingsTab(
     val showPromotions by updatesViewModel.showPromotions.collectAsStateWithLifecycle()
     val stripAppNameSubtitle by updatesViewModel.stripAppNameSubtitle.collectAsStateWithLifecycle()
     val detectClipboardLinks by updatesViewModel.detectClipboardLinks.collectAsStateWithLifecycle()
+    val themePreferences = koinInject<ThemePreferencesRepository>()
+    val appLanguage by themePreferences.appLanguage.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
     val selectedSource = AppSource.entries.firstOrNull { it in searchSources } ?: AppSource.Default.first()
     val selectedUpdateSource by updatesViewModel.updateSource.collectAsStateWithLifecycle()
     val searchCapabilities = selectedSource.capabilities
@@ -338,6 +354,24 @@ fun SettingsTab(
                         selectedIndex = homePageOptions.indexOf(homePage).coerceAtLeast(0),
                         onSelectedIndexChange = { updatesViewModel.setHomePage(homePageOptions[it]) },
                     )
+                    val languageOptions = remember {
+                        listOf(
+                            LanguageOption(null, Res.string.language_system),
+                            LanguageOption("zh-TW", Res.string.language_zh_tw),
+                            LanguageOption("zh-HK", Res.string.language_zh_hk),
+                            LanguageOption("zh-CN", Res.string.language_zh_cn),
+                            LanguageOption("en", Res.string.language_en),
+                        )
+                    }
+                    WindowDropdownPreference(
+                        title = stringResource(Res.string.language),
+                        summary = stringResource(Res.string.language_summary),
+                        items = languageOptions.map { stringResource(it.titleRes) },
+                        selectedIndex = languageOptions.indexOfFirst { it.code == appLanguage }.takeIf { it >= 0 } ?: 0,
+                        onSelectedIndexChange = { index ->
+                            coroutineScope.launch { themePreferences.setAppLanguage(languageOptions[index].code) }
+                        },
+                    )
                     SwitchPreference(
                         title = stringResource(Res.string.strip_name_subtitle),
                         summary = stringResource(Res.string.strip_name_subtitle_summary),
@@ -377,3 +411,8 @@ private val HomePage.labelRes
         HomePage.UPDATES -> Res.string.nav_updates
         HomePage.SEARCH -> Res.string.nav_search
     }
+
+private data class LanguageOption(
+    val code: String?,
+    val titleRes: StringResource,
+)

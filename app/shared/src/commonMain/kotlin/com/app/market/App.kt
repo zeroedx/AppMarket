@@ -53,6 +53,7 @@ import com.app.market.ui.theme.LocalEnableBlur
 import com.app.market.ui.theme.LocalEnableFloatingBottomBar
 import com.app.market.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.app.market.ui.theme.LocalEnableNavigationBadge
+import com.app.market.ui.util.AppLocaleProvider
 import com.app.market.ui.util.LocalStripAppNameSubtitle
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -94,6 +95,7 @@ fun App(
     val enableNavigationBadge by themePrefs.enableNavigationBadge.collectAsStateWithLifecycle()
     val enablePredictiveBack by themePrefs.enablePredictiveBack.collectAsStateWithLifecycle()
     val pageScale by themePrefs.pageScale.collectAsStateWithLifecycle()
+    val appLanguage by themePrefs.appLanguage.collectAsStateWithLifecycle()
     val stripAppNameSubtitle by updatePrefs.stripAppNameSubtitle.collectAsStateWithLifecycle()
     val pendingUserAction by downloads.pendingUserAction.collectAsStateWithLifecycle(
         minActiveState = Lifecycle.State.RESUMED,
@@ -156,62 +158,64 @@ fun App(
         }
     }
     ApplyPredictiveBackPreference(enablePredictiveBack)
-    val systemDark = isSystemInDarkTheme()
-    val themeIsDark = when (controller.colorSchemeMode) {
-        ColorSchemeMode.Dark, ColorSchemeMode.MonetDark -> true
-        ColorSchemeMode.Light, ColorSchemeMode.MonetLight -> false
-        ColorSchemeMode.System, ColorSchemeMode.MonetSystem -> systemDark
-    }
-    val baseColors = controller.currentColors()
-    val themeColors = if (amoledDark && themeIsDark) {
-        baseColors.copy(
-            background = Color.Black,
-            surface = Color.Black,
-            surfaceContainer = Color.Black,
-            surfaceContainerHigh = Color(0xFF0C0C0C),
-            surfaceContainerHighest = Color(0xFF151515),
-        )
-    } else {
-        baseColors
-    }
-    MiuixTheme(colors = themeColors) {
-        val systemDensity = LocalDensity.current
-        val scaledDensity = remember(systemDensity, pageScale) {
-            Density(systemDensity.density * pageScale, systemDensity.fontScale)
+    AppLocaleProvider(localeTag = appLanguage) {
+        val systemDark = isSystemInDarkTheme()
+        val themeIsDark = when (controller.colorSchemeMode) {
+            ColorSchemeMode.Dark, ColorSchemeMode.MonetDark -> true
+            ColorSchemeMode.Light, ColorSchemeMode.MonetLight -> false
+            ColorSchemeMode.System, ColorSchemeMode.MonetSystem -> systemDark
         }
-        CompositionLocalProvider(
-            LocalContentColor provides MiuixTheme.colorScheme.onBackground,
-            LocalStripAppNameSubtitle provides stripAppNameSubtitle,
-            LocalDensity provides scaledDensity,
-            LocalEnableBlur provides enableBlur,
-            LocalEnableFloatingBottomBar provides enableFloatingBottomBar,
-            LocalEnableFloatingBottomBarBlur provides enableFloatingBottomBarBlur,
-            LocalEnableNavigationBadge provides enableNavigationBadge,
-        ) {
-            AppNavigation(
-                externalDetailLink = externalDetailLink,
-                externalDetailQuery = externalDetailQuery,
-                onExternalDetailConsumed = onExternalDetailConsumed,
-                externalSearchKeyword = externalSearchKeyword,
-                onExternalSearchConsumed = onExternalSearchConsumed,
-                externalOpenDownloads = externalOpenDownloads,
-                onExternalDownloadsConsumed = onExternalDownloadsConsumed,
+        val baseColors = controller.currentColors()
+        val themeColors = if (amoledDark && themeIsDark) {
+            baseColors.copy(
+                background = Color.Black,
+                surface = Color.Black,
+                surfaceContainer = Color.Black,
+                surfaceContainerHigh = Color(0xFF0C0C0C),
+                surfaceContainerHighest = Color(0xFF151515),
             )
-            InstallFailureDialog(
-                show = failureMessage != null,
-                message = failureMessage ?: retainedFailureMessage,
-                onDismiss = downloads::consumePendingUserAction,
-            )
-            UnknownSourcesPermissionDialog(
-                show = pendingUserAction == InstallUserAction.GrantUnknownSourcesPermission,
-                onDismiss = downloads::consumePendingUserAction,
-                onOpenSettings = {
-                    downloads.consumePendingUserAction()
-                    if (!uiPlatform.openUnknownSourcesSettings()) {
-                        uiPlatform.showToast(settingsUnavailableMessage)
-                    }
-                },
-            )
+        } else {
+            baseColors
+        }
+        MiuixTheme(colors = themeColors) {
+            val systemDensity = LocalDensity.current
+            val scaledDensity = remember(systemDensity, pageScale) {
+                Density(systemDensity.density * pageScale, systemDensity.fontScale)
+            }
+            CompositionLocalProvider(
+                LocalContentColor provides MiuixTheme.colorScheme.onBackground,
+                LocalStripAppNameSubtitle provides stripAppNameSubtitle,
+                LocalDensity provides scaledDensity,
+                LocalEnableBlur provides enableBlur,
+                LocalEnableFloatingBottomBar provides enableFloatingBottomBar,
+                LocalEnableFloatingBottomBarBlur provides enableFloatingBottomBarBlur,
+                LocalEnableNavigationBadge provides enableNavigationBadge,
+            ) {
+                AppNavigation(
+                    externalDetailLink = externalDetailLink,
+                    externalDetailQuery = externalDetailQuery,
+                    onExternalDetailConsumed = onExternalDetailConsumed,
+                    externalSearchKeyword = externalSearchKeyword,
+                    onExternalSearchConsumed = onExternalSearchConsumed,
+                    externalOpenDownloads = externalOpenDownloads,
+                    onExternalDownloadsConsumed = onExternalDownloadsConsumed,
+                )
+                InstallFailureDialog(
+                    show = failureMessage != null,
+                    message = failureMessage ?: retainedFailureMessage,
+                    onDismiss = downloads::consumePendingUserAction,
+                )
+                UnknownSourcesPermissionDialog(
+                    show = pendingUserAction == InstallUserAction.GrantUnknownSourcesPermission,
+                    onDismiss = downloads::consumePendingUserAction,
+                    onOpenSettings = {
+                        downloads.consumePendingUserAction()
+                        if (!uiPlatform.openUnknownSourcesSettings()) {
+                            uiPlatform.showToast(settingsUnavailableMessage)
+                        }
+                    },
+                )
+            }
         }
     }
 }
