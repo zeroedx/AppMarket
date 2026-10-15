@@ -229,6 +229,7 @@ private class SearchPreferences : UpdatePreferencesRepository {
     override val showSameDeveloper = MutableStateFlow(false)
     override val showPromotions = MutableStateFlow(false)
     override val stripAppNameSubtitle = MutableStateFlow(false)
+    override val detectClipboardLinks = MutableStateFlow(false)
     override val homePage = MutableStateFlow(HomePage.SEARCH)
     override val searchSources = MutableStateFlow(setOf(AppSource.HONOR))
     override val todaySource = MutableStateFlow(AppSource.HONOR)
@@ -263,6 +264,16 @@ private class SearchPreferences : UpdatePreferencesRepository {
 
     override suspend fun setShowPromotions(value: Boolean) {
         showPromotions.value = value
+    }
+
+    override suspend fun setDetectClipboardLinks(value: Boolean) {
+        detectClipboardLinks.value = value
+    }
+
+    private var clipboardLink = ""
+    override suspend fun lastClipboardLink(): String = clipboardLink
+    override suspend fun setLastClipboardLink(value: String) {
+        clipboardLink = value
     }
 
     override suspend fun setStripAppNameSubtitle(value: Boolean) {

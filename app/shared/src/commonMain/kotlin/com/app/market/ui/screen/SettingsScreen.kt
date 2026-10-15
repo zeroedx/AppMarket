@@ -18,6 +18,8 @@ import com.app.market.resources.Res
 import com.app.market.resources.about
 import com.app.market.resources.about_summary
 import com.app.market.resources.app_detail
+import com.app.market.resources.clipboard_link_detect
+import com.app.market.resources.clipboard_link_detect_summary
 import com.app.market.resources.device_profile
 import com.app.market.resources.device_profile_summary
 import com.app.market.resources.downloading_apps
@@ -113,6 +115,7 @@ fun SettingsTab(
     val showSameDeveloper by updatesViewModel.showSameDeveloper.collectAsStateWithLifecycle()
     val showPromotions by updatesViewModel.showPromotions.collectAsStateWithLifecycle()
     val stripAppNameSubtitle by updatesViewModel.stripAppNameSubtitle.collectAsStateWithLifecycle()
+    val detectClipboardLinks by updatesViewModel.detectClipboardLinks.collectAsStateWithLifecycle()
     val selectedSource = AppSource.entries.firstOrNull { it in searchSources } ?: AppSource.Default.first()
     val selectedUpdateSource by updatesViewModel.updateSource.collectAsStateWithLifecycle()
     val searchCapabilities = selectedSource.capabilities
@@ -340,6 +343,12 @@ fun SettingsTab(
                         summary = stringResource(Res.string.strip_name_subtitle_summary),
                         checked = stripAppNameSubtitle,
                         onCheckedChange = updatesViewModel::setStripAppNameSubtitle,
+                    )
+                    SwitchPreference(
+                        title = stringResource(Res.string.clipboard_link_detect),
+                        summary = stringResource(Res.string.clipboard_link_detect_summary),
+                        checked = detectClipboardLinks,
+                        onCheckedChange = updatesViewModel::setDetectClipboardLinks,
                     )
                     ArrowPreference(
                         title = stringResource(Res.string.device_profile),

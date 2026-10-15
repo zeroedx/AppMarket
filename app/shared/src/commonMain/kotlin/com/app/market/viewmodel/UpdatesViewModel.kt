@@ -71,6 +71,9 @@ class UpdatesViewModel(
     val showSameDeveloper: StateFlow<Boolean> = prefs.showSameDeveloper
     val showPromotions: StateFlow<Boolean> = prefs.showPromotions
 
+    /** 进入应用时识别剪贴板中的商店链接。 */
+    val detectClipboardLinks: StateFlow<Boolean> = prefs.detectClipboardLinks
+
     // 全局应用名精简开关；App 根部经 CompositionLocal 下发，这里仅供设置页读写。
     val stripAppNameSubtitle: StateFlow<Boolean> = prefs.stripAppNameSubtitle
 
@@ -138,6 +141,7 @@ class UpdatesViewModel(
     fun setShowAppComments(value: Boolean) = persist { prefs.setShowAppComments(value) }
     fun setShowSameDeveloper(value: Boolean) = persist { prefs.setShowSameDeveloper(value) }
     fun setShowPromotions(value: Boolean) = persist { prefs.setShowPromotions(value) }
+    fun setDetectClipboardLinks(value: Boolean) = persist { prefs.setDetectClipboardLinks(value) }
     fun setStripAppNameSubtitle(value: Boolean) = persist { prefs.setStripAppNameSubtitle(value) }
     fun setHomePage(value: HomePage) = persist { prefs.setHomePage(value) }
     fun setSearchSource(value: AppSource) = persist { prefs.setSearchSources(setOf(value)) }

@@ -22,6 +22,7 @@ import com.app.market.data.remote.xiaomi.XiaomiHttpClient
 import com.app.market.data.repository.AnonymousAccountRepositoryImpl
 import com.app.market.data.repository.HonorRepositoryImpl
 import com.app.market.data.repository.HuaweiRepositoryImpl
+import com.app.market.data.repository.MarketLinkResolverImpl
 import com.app.market.data.repository.MarketRepositoryImpl
 import com.app.market.data.repository.MarketSourceRepositoryImpl
 import com.app.market.data.repository.OppoRepositoryImpl
@@ -39,6 +40,7 @@ import com.app.market.domain.repository.AccountRepository
 import com.app.market.domain.repository.DownloadRepository
 import com.app.market.domain.repository.HonorRepository
 import com.app.market.domain.repository.HuaweiRepository
+import com.app.market.domain.repository.MarketLinkResolver
 import com.app.market.domain.repository.MarketRepository
 import com.app.market.domain.repository.MarketSourceRepository
 import com.app.market.domain.repository.OppoRepository
@@ -102,6 +104,7 @@ private val commonDataModule = module {
     singleOf(::HuaweiProtocol)
     singleOf(::HuaweiApi)
     singleOf(::HuaweiRepositoryImpl) { bind<HuaweiRepository>() }
+    singleOf(::MarketLinkResolverImpl) { bind<MarketLinkResolver>() }
     single { TapTapApiConfig() }
     singleOf(::TapTapApi)
     singleOf(::TapTapRepositoryImpl) { bind<TapTapRepository>() }
