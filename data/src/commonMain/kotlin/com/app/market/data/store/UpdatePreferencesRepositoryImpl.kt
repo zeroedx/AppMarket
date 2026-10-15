@@ -115,6 +115,42 @@ internal class UpdatePreferencesRepositoryImpl(
             arrivals.forEach { it.await() }
             _initialized.value = true
         }
+        // 旧版的游戏 / 应用分区来源在 1255116 被合并为单一 category_source，这里做一次性迁移。
+        scope.launch { migrateLegacyCategorySources() }
+    }
+
+    /**
+     * 把旧版的 `game_sources` / `app_sources` 迁移到 `category_source`。
+     *
+     * 旧版两个键各自独立控制游戏页与应用页；只有它们指向同一个受支持来源时才能无损合并，
+     * 其余情况（缺失、取值不同、来源不受分区支持）保持新版默认值，并保留旧键不做猜测。
+     * 迁移只在 `category_source` 尚未写入时执行，写入与清理旧键在同一次原子更新里完成，
+     * 因此重复启动不会重复覆盖。
+     */
+    private suspend fun migrateLegacyCategorySources() {
+        runCatching {
+            val existing = preferences.read(UpdatePreferenceKeys.CategorySource)
+            if (!existing.isNullOrBlank()) return@runCatching
+            val gameRaw = preferences.read(UpdatePreferenceKeys.LegacyGameSources)
+            val appRaw = preferences.read(UpdatePreferenceKeys.LegacyAppSources)
+            if (gameRaw.isNullOrBlank() || appRaw.isNullOrBlank()) return@runCatching
+            val game = AppSource.parse(gameRaw).singleOrNull()
+            val app = AppSource.parse(appRaw).singleOrNull()
+            if (game == null || game != app || game !in AppSource.CategorySources) return@runCatching
+            preferences.update(
+                UpdatePreferenceKeys.CategorySource.namespace,
+                PreferenceChanges(
+                    strings = mapOf(
+                        UpdatePreferenceKeys.CategorySource to game.token,
+                        UpdatePreferenceKeys.LegacyGameSources to null,
+                        UpdatePreferenceKeys.LegacyAppSources to null,
+                    ),
+                ),
+            )
+        }.onFailure { error ->
+            if (error is CancellationException) throw error
+            debugLog("UpdatePreferencesRepository") { "legacy category source migration failed: $error" }
+        }
     }
 
     /** 收集 [flow] 到状态，返回一个在首个值到达（或读取失败）时完成的信号。 */

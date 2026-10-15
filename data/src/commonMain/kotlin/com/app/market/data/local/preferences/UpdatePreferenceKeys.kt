@@ -17,6 +17,11 @@ object UpdatePreferenceKeys {
     val LastClipboardLink = StringPreferenceKey(NS, "last_clipboard_link")
     val HomePage = StringPreferenceKey(NS, "home_page")
     val SearchSources = StringPreferenceKey(NS, "search_sources")
+
+    /** 旧版游戏/应用分区来源键（v2.3.3）；仅为迁移保留，读写不再走这两个键。 */
+    val LegacyGameSources = StringPreferenceKey(NS, "game_sources")
+    val LegacyAppSources = StringPreferenceKey(NS, "app_sources")
+
     val TodaySource = StringPreferenceKey(NS, "today_source")
     val CategorySource = StringPreferenceKey(NS, "category_source")
     val UpdateSource = StringPreferenceKey(NS, "update_source")
