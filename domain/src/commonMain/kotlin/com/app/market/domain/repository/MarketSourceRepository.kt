@@ -1,9 +1,14 @@
 package com.app.market.domain.repository
 
 import com.app.market.domain.model.download.DownloadMeta
+import com.app.market.domain.model.market.AppCategory
 import com.app.market.domain.model.market.AppComments
 import com.app.market.domain.model.market.AppDetail
 import com.app.market.domain.model.market.AppSource
+import com.app.market.domain.model.market.AppSubCategory
+import com.app.market.domain.model.market.CategoryOption
+import com.app.market.domain.model.market.GameRanking
+import com.app.market.domain.model.market.GameSubCategory
 import com.app.market.domain.model.market.MarketAppInfo
 import com.app.market.domain.model.market.SearchPage
 import com.app.market.domain.model.today.TodayArticle
@@ -21,6 +26,18 @@ import kotlinx.coroutines.flow.Flow
  */
 interface MarketSourceRepository {
     suspend fun search(source: AppSource, keyword: String, page: Int = 0): SearchPage
+
+    suspend fun categoryApps(
+        source: AppSource,
+        category: AppCategory,
+        subCategory: AppSubCategory = AppSubCategory.TOOLS,
+        ranking: GameRanking = GameRanking.HOT,
+        gameSubCategory: GameSubCategory = GameSubCategory.ALL,
+        optionId: String? = null,
+        page: Int = 0,
+    ): SearchPage
+
+    suspend fun categoryOptions(source: AppSource, category: AppCategory): List<CategoryOption>
 
     suspend fun appDetail(
         source: AppSource,

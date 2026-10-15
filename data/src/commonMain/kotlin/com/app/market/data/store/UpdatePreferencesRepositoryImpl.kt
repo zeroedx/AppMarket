@@ -61,12 +61,10 @@ internal class UpdatePreferencesRepositoryImpl(
     override val homePage: StateFlow<HomePage> = _homePage.asStateFlow()
     private val _searchSources = MutableStateFlow(AppSource.Default)
     override val searchSources: StateFlow<Set<AppSource>> = _searchSources.asStateFlow()
-    private val _gameSources = MutableStateFlow(AppSource.Default)
-    override val gameSources: StateFlow<Set<AppSource>> = _gameSources.asStateFlow()
-    private val _appSources = MutableStateFlow(AppSource.Default)
-    override val appSources: StateFlow<Set<AppSource>> = _appSources.asStateFlow()
     private val _todaySource = MutableStateFlow(AppSource.DefaultTodaySource)
     override val todaySource: StateFlow<AppSource> = _todaySource.asStateFlow()
+    private val _categorySource = MutableStateFlow(AppSource.DefaultCategorySource)
+    override val categorySource: StateFlow<AppSource> = _categorySource.asStateFlow()
     private val _updateSource = MutableStateFlow(AppSource.DefaultUpdateSource)
     override val updateSource: StateFlow<AppSource> = _updateSource.asStateFlow()
     private val _permanentIgnores = MutableStateFlow<List<IgnoredUpdate>>(emptyList())
@@ -94,14 +92,11 @@ internal class UpdatePreferencesRepositoryImpl(
             observe("searchSources", preferences.observe(UpdatePreferenceKeys.SearchSources)) {
                 _searchSources.value = AppSource.parse(it)
             },
-            observe("gameSources", preferences.observe(UpdatePreferenceKeys.GameSources)) {
-                _gameSources.value = AppSource.parse(it)
-            },
-            observe("appSources", preferences.observe(UpdatePreferenceKeys.AppSources)) {
-                _appSources.value = AppSource.parse(it)
-            },
             observe("todaySource", preferences.observe(UpdatePreferenceKeys.TodaySource)) {
                 _todaySource.value = AppSource.fromToken(it).todayOrDefault()
+            },
+            observe("categorySource", preferences.observe(UpdatePreferenceKeys.CategorySource)) {
+                _categorySource.value = AppSource.fromToken(it).categoryOrDefault()
             },
             observe("updateSource", preferences.observe(UpdatePreferenceKeys.UpdateSource)) {
                 _updateSource.value = AppSource.fromToken(it) ?: AppSource.DefaultUpdateSource
@@ -166,14 +161,11 @@ internal class UpdatePreferencesRepositoryImpl(
     override suspend fun setSearchSources(value: Set<AppSource>) =
         preferences.put(UpdatePreferenceKeys.SearchSources, AppSource.serialize(value.ifEmpty { AppSource.Default }))
 
-    override suspend fun setGameSources(value: Set<AppSource>) =
-        preferences.put(UpdatePreferenceKeys.GameSources, AppSource.serialize(value.ifEmpty { AppSource.Default }))
-
-    override suspend fun setAppSources(value: Set<AppSource>) =
-        preferences.put(UpdatePreferenceKeys.AppSources, AppSource.serialize(value.ifEmpty { AppSource.Default }))
-
     override suspend fun setTodaySource(value: AppSource) =
         preferences.put(UpdatePreferenceKeys.TodaySource, value.todayOrDefault().token)
+
+    override suspend fun setCategorySource(value: AppSource) =
+        preferences.put(UpdatePreferenceKeys.CategorySource, value.categoryOrDefault().token)
 
     override suspend fun setUpdateSource(value: AppSource) =
         preferences.put(UpdatePreferenceKeys.UpdateSource, value.token)
@@ -358,3 +350,6 @@ internal class UpdatePreferencesRepositoryImpl(
 
 private fun AppSource?.todayOrDefault(): AppSource =
     this?.takeIf { it.capabilities.supportsTodayFeed } ?: AppSource.DefaultTodaySource
+
+private fun AppSource?.categoryOrDefault(): AppSource =
+    this?.takeIf { it in AppSource.CategorySources } ?: AppSource.DefaultCategorySource

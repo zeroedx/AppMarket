@@ -38,6 +38,8 @@ internal class OppoApi(
     private val client: HttpClient,
     private val profileStore: ProfileRepository,
 ) {
+    private val categoryCache = mutableMapOf<Boolean, List<OppoCategory>>()
+
     suspend fun search(keyword: String, page: Int): SearchPage {
         val profile = profileStore.load(AppSource.OPPO)
         val region = profileStore.currentOppoStoreRegion()
@@ -48,6 +50,59 @@ internal class OppoApi(
         return SearchPage(
             items = resources.map(::toApp),
             // The protocol does not expose a reliable total count; an empty page is the only safe stop.
+            hasMore = resources.isNotEmpty() && page < MAX_PAGE,
+        )
+    }
+
+    /**
+     * 「分类」页的大类（`/card/store/v4/cat/app|game`）。响应是 protobuf 卡片列表，
+     * 其中每个 CategoryCardDto 带名称（101）与大类 id（103）；结果在进程内缓存。
+     */
+    suspend fun categories(games: Boolean): List<OppoCategory> {
+        categoryCache[games]?.let { return it }
+        val profile = profileStore.load(AppSource.OPPO)
+        val region = profileStore.currentOppoStoreRegion()
+        val response = request(
+            HttpMethod.Get,
+            url(
+                region,
+                if (games) "/card/store/v4/cat/game" else "/card/store/v4/cat/app",
+                mapOf("start" to "0", "size" to CN_PAGE_SIZE.toString()),
+            ),
+            body = null,
+            profile = profile,
+            region = region,
+        )
+        val categories = parseOppoCategories(response)
+        if (categories.isEmpty()) throw MarketException("OPPO 未返回分类")
+        categoryCache[games] = categories
+        return categories
+    }
+
+    /** 大类下的应用（`/card/store/v3/cat/resources/alg/1`，参数 `cid`）；每页偏移 20，跨页不重复。 */
+    suspend fun categoryApps(categoryId: Long, page: Int): SearchPage {
+        val profile = profileStore.load(AppSource.OPPO)
+        val region = profileStore.currentOppoStoreRegion()
+        val pageSize = CN_PAGE_SIZE
+        val response = request(
+            HttpMethod.Get,
+            url(
+                region,
+                "/card/store/v3/cat/resources/alg/1",
+                mapOf(
+                    "cid" to categoryId.toString(),
+                    "start" to (page * pageSize).toString(),
+                    "size" to pageSize.toString(),
+                ),
+            ),
+            body = null,
+            profile = profile,
+            region = region,
+        )
+        val resources = parseOppoResources(response)
+        return SearchPage(
+            items = resources.map(::toApp),
+            // 无可靠总数，空页即末页
             hasMore = resources.isNotEmpty() && page < MAX_PAGE,
         )
     }

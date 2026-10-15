@@ -110,6 +110,26 @@ internal data class OppoPatch(
     val obitVersion: Int,
 )
 
+/** 分类页大类（CategoryCardDto 的 field 101 名称 + 103 id）。 */
+internal data class OppoCategory(val id: Long, val name: String)
+
+/**
+ * `/card/store/v4/cat/app|game` 返回的卡片列表。每个 CategoryCardDto 带 127 类名标记、
+ * 101 名称与 103 大类 id。解析与 [parseOppoResources] 一样递归遍历响应嵌套。
+ */
+internal fun parseOppoCategories(bytes: ByteArray): List<OppoCategory> {
+    val root = parseOppoProto(bytes)
+    return root.all(3).mapNotNull { field ->
+        val card = root.child(field) ?: return@mapNotNull null
+        if (card.string(127) != OPPO_CATEGORY_CARD) return@mapNotNull null
+        val id = card.long(103)
+        val name = card.string(101)
+        if (id <= 0L || name.isBlank()) null else OppoCategory(id = id, name = name)
+    }.distinctBy(OppoCategory::id)
+}
+
+private const val OPPO_CATEGORY_CARD = "com.heytap.cdo.card.domain.dto.CategoryCardDto"
+
 /** DownloadFileWrapDto / DownloadFileInfoDto returned by the global v2 download endpoint. */
 internal data class OppoDownloadFile(
     val id: String,

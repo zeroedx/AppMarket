@@ -12,6 +12,7 @@ import com.app.market.domain.model.installed.InstalledPackage
 import com.app.market.domain.model.market.AppDetail
 import com.app.market.domain.model.market.AppScreenshot
 import com.app.market.domain.model.market.AppSource
+import com.app.market.domain.model.market.GameRanking
 import com.app.market.domain.model.market.MarketAppInfo
 import com.app.market.domain.model.market.ScreenshotOrientation
 import com.app.market.domain.model.market.SearchPage
@@ -91,6 +92,19 @@ internal class TapTapRepositoryImpl(
             hasMore = hasMore,
         )
     }
+
+    override suspend fun rankedGames(ranking: GameRanking, page: Int, pageSize: Int): SearchPage =
+        withContext(Dispatchers.Default) {
+            val (recommendations, hasMore) = api.ranking(ranking.tapTapType, page, pageSize)
+            recommendations.forEach { recommendationsById[it.appId] = it }
+            val records = api.apps(recommendations.map(TapTapRecommendationRecord::packageName))
+            records.forEach(::remember)
+            val byPackage = records.associateBy { it.packageName.lowercase() }
+            SearchPage(
+                items = recommendations.map { byPackage[it.packageName.lowercase()]?.toApp() ?: it.toFallbackApp() },
+                hasMore = hasMore,
+            )
+        }
 
     override suspend fun todayArticle(rId: String): TodayArticle = withContext(Dispatchers.Default) {
         val appId = rId.toLongOrNull()?.takeIf { it > 0L }

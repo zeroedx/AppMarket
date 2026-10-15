@@ -1,9 +1,14 @@
 package com.app.market.data.repository
 
 import com.app.market.domain.model.download.DownloadMeta
+import com.app.market.domain.model.market.AppCategory
 import com.app.market.domain.model.market.AppComments
 import com.app.market.domain.model.market.AppDetail
 import com.app.market.domain.model.market.AppSource
+import com.app.market.domain.model.market.AppSubCategory
+import com.app.market.domain.model.market.CategoryOption
+import com.app.market.domain.model.market.GameRanking
+import com.app.market.domain.model.market.GameSubCategory
 import com.app.market.domain.model.market.MarketAppInfo
 import com.app.market.domain.model.market.SearchPage
 import com.app.market.domain.model.today.TodayArticle
@@ -45,6 +50,30 @@ internal class MarketSourceRepositoryImpl(
         AppSource.HUAWEI -> huawei.search(keyword, page)
         AppSource.TAPTAP -> tapTap.search(keyword, page)
     }
+
+    override suspend fun categoryApps(
+        source: AppSource,
+        category: AppCategory,
+        subCategory: AppSubCategory,
+        ranking: GameRanking,
+        gameSubCategory: GameSubCategory,
+        optionId: String?,
+        page: Int,
+    ): SearchPage = when {
+        category == AppCategory.GAMES && source == AppSource.TAPTAP -> tapTap.rankedGames(ranking, page)
+        source == AppSource.HUAWEI -> huawei.rankedApps(games = category == AppCategory.GAMES, page = page)
+        source == AppSource.OPPO -> oppo.categoryApps(
+            games = category == AppCategory.GAMES,
+            optionId = optionId ?: oppo.categoryOptions(category == AppCategory.GAMES).first().id,
+            page = page,
+        )
+
+        category == AppCategory.GAMES -> market.categoryApps(gameSubCategory.xiaomiCategoryId, page)
+        else -> market.categoryApps(subCategory.xiaomiCategoryId, page)
+    }
+
+    override suspend fun categoryOptions(source: AppSource, category: AppCategory): List<CategoryOption> =
+        if (source == AppSource.OPPO) oppo.categoryOptions(category == AppCategory.GAMES) else emptyList()
 
     override suspend fun appDetail(
         source: AppSource,

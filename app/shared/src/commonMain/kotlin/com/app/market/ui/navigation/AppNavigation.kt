@@ -25,6 +25,7 @@ import com.app.market.ui.screen.ThemeSettingsScreen
 import com.app.market.ui.screen.TodayArticleScreen
 import com.app.market.ui.screen.UpdateHistoryScreen
 import com.app.market.viewmodel.AppDetailViewModel
+import com.app.market.viewmodel.CategoryViewModel
 import com.app.market.viewmodel.DeviceProfileViewModel
 import com.app.market.viewmodel.DownloadingAppsViewModel
 import com.app.market.viewmodel.HistoricalVersionsViewModel
@@ -62,6 +63,7 @@ fun AppNavigation(
     val searchViewModel = koinViewModel<SearchViewModel>()
     val installerSettingsViewModel = koinViewModel<InstallerSettingsViewModel>()
     val todayViewModel = koinViewModel<TodayViewModel>()
+    val categoryViewModel = koinViewModel<CategoryViewModel>()
     val swipeBackDirection = if (LocalLayoutDirection.current == LayoutDirection.Rtl) {
         NavSwipeDirection.RightToLeft
     } else {
@@ -117,6 +119,7 @@ fun AppNavigation(
                     searchViewModel = searchViewModel,
                     installerSettingsViewModel = installerSettingsViewModel,
                     todayViewModel = todayViewModel,
+                    categoryViewModel = categoryViewModel,
                     pendingSearchKeyword = pendingSearchKeyword,
                     onPendingSearchConsumed = { pendingSearchKeyword = null },
                 )

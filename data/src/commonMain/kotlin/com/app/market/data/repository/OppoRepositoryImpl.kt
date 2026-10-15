@@ -1,9 +1,11 @@
 package com.app.market.data.repository
 
 import com.app.market.data.remote.oppo.OppoApi
+import com.app.market.domain.exception.MarketException
 import com.app.market.domain.model.download.DownloadMeta
 import com.app.market.domain.model.installed.InstalledPackage
 import com.app.market.domain.model.market.AppDetail
+import com.app.market.domain.model.market.CategoryOption
 import com.app.market.domain.model.market.MarketAppInfo
 import com.app.market.domain.model.market.SearchPage
 import com.app.market.domain.model.market.hasInstalledSplits
@@ -35,6 +37,16 @@ internal class OppoRepositoryImpl(
             items = result.items.distinctBy { it.packageName.lowercase() },
         )
     }
+
+    override suspend fun categoryOptions(games: Boolean): List<CategoryOption> = withContext(Dispatchers.Default) {
+        api.categories(games).map { CategoryOption(id = it.id.toString(), name = it.name) }
+    }
+
+    override suspend fun categoryApps(games: Boolean, optionId: String, page: Int): SearchPage =
+        withContext(Dispatchers.Default) {
+            val categoryId = optionId.toLongOrNull() ?: throw MarketException("OPPO 分类 id 无效")
+            api.categoryApps(categoryId, page)
+        }
 
     override suspend fun appDetail(appId: Long, packageName: String, externalQuery: String?): AppDetail =
         withContext(Dispatchers.Default) { api.appDetail(appId, packageName, externalQuery) }

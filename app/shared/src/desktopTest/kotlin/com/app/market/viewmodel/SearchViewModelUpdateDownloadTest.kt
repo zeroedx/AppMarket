@@ -130,6 +130,19 @@ private class RecordingSearchSources : MarketSourceRepository {
     }
 
     override suspend fun search(source: AppSource, keyword: String, page: Int): SearchPage = error("Not used")
+    override suspend fun categoryApps(
+        source: AppSource,
+        category: com.app.market.domain.model.market.AppCategory,
+        subCategory: com.app.market.domain.model.market.AppSubCategory,
+        ranking: com.app.market.domain.model.market.GameRanking,
+        gameSubCategory: com.app.market.domain.model.market.GameSubCategory,
+        optionId: String?,
+        page: Int,
+    ): SearchPage = error("Not used")
+    override suspend fun categoryOptions(
+        source: AppSource,
+        category: com.app.market.domain.model.market.AppCategory,
+    ): List<com.app.market.domain.model.market.CategoryOption> = emptyList()
     override suspend fun appDetail(
         source: AppSource,
         appId: Long,
@@ -218,9 +231,8 @@ private class SearchPreferences : UpdatePreferencesRepository {
     override val stripAppNameSubtitle = MutableStateFlow(false)
     override val homePage = MutableStateFlow(HomePage.SEARCH)
     override val searchSources = MutableStateFlow(setOf(AppSource.HONOR))
-    override val gameSources = MutableStateFlow(setOf(AppSource.HONOR))
-    override val appSources = MutableStateFlow(setOf(AppSource.HONOR))
     override val todaySource = MutableStateFlow(AppSource.HONOR)
+    override val categorySource = MutableStateFlow(AppSource.XIAOMI)
     override val updateSource = MutableStateFlow(AppSource.HONOR)
     override val permanentIgnores: StateFlow<List<IgnoredUpdate>> = MutableStateFlow(emptyList())
     override val onceIgnores: StateFlow<List<IgnoredUpdate>> = MutableStateFlow(emptyList())
@@ -265,12 +277,8 @@ private class SearchPreferences : UpdatePreferencesRepository {
         searchSources.value = value
     }
 
-    override suspend fun setGameSources(value: Set<AppSource>) {
-        gameSources.value = value
-    }
-
-    override suspend fun setAppSources(value: Set<AppSource>) {
-        appSources.value = value
+    override suspend fun setCategorySource(value: AppSource) {
+        categorySource.value = value
     }
 
     override suspend fun setTodaySource(value: AppSource) {

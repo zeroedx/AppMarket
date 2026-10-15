@@ -65,11 +65,12 @@ import com.app.market.ui.screen.SearchTab
 import com.app.market.ui.screen.SettingsTab
 import com.app.market.ui.screen.TodayTab
 import com.app.market.ui.screen.UpdatesTab
-import com.app.market.ui.model.AppCategory
+import com.app.market.domain.model.market.AppCategory
 import com.app.market.ui.theme.LocalEnableFloatingBottomBar
 import com.app.market.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.app.market.ui.theme.LocalEnableNavigationBadge
 import com.app.market.ui.util.rememberIsWideScreen
+import com.app.market.viewmodel.CategoryViewModel
 import com.app.market.viewmodel.InstallerSettingsViewModel
 import com.app.market.viewmodel.SearchViewModel
 import com.app.market.viewmodel.TodayViewModel
@@ -112,6 +113,7 @@ fun MainPage(
     searchViewModel: SearchViewModel,
     installerSettingsViewModel: InstallerSettingsViewModel,
     todayViewModel: TodayViewModel,
+    categoryViewModel: CategoryViewModel,
     pendingSearchKeyword: String? = null,
     onPendingSearchConsumed: () -> Unit = {},
 ) {
@@ -214,18 +216,16 @@ fun MainPage(
                 )
 
                 MainTab.Games -> CategoryTab(
-                    viewModel = searchViewModel,
                     category = AppCategory.GAMES,
-                    sources = updatesViewModel.gameSources,
+                    viewModel = categoryViewModel,
                     bottomPadding = bottomPadding,
                     onOpenDetail = openDetail,
                     isCurrentPage = selectedPage == tabs.indexOf(MainTab.Games),
                 )
 
                 MainTab.Apps -> CategoryTab(
-                    viewModel = searchViewModel,
                     category = AppCategory.APPS,
-                    sources = updatesViewModel.appSources,
+                    viewModel = categoryViewModel,
                     bottomPadding = bottomPadding,
                     onOpenDetail = openDetail,
                     isCurrentPage = selectedPage == tabs.indexOf(MainTab.Apps),
