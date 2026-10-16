@@ -25,6 +25,20 @@ dependencies {
     implementation(libs.focus.api)
 }
 
+val signingProperties = Properties()
+runCatching {
+    project.rootProject.file("local.properties").reader(Charsets.UTF_8).use(signingProperties::load)
+}
+val keystorePath = signingProperties.getProperty("KEYSTORE_PATH") ?: System.getenv("KEYSTORE_PATH")
+val keystorePwd = signingProperties.getProperty("KEYSTORE_PASS") ?: System.getenv("KEYSTORE_PASS")
+val keystoreAlias = signingProperties.getProperty("KEY_ALIAS") ?: System.getenv("KEY_ALIAS")
+val keyPwd = signingProperties.getProperty("KEY_PASSWORD") ?: System.getenv("KEY_PASSWORD")
+
+// A release build must never silently fall back to the debug key or an unsigned APK:
+// all four signing inputs have to be present, otherwise the release variant is refused.
+val releaseSigningConfigured =
+    listOf(keystorePath, keystorePwd, keystoreAlias, keyPwd).all { !it.isNullOrBlank() }
+
 android {
     namespace = ProjectConfig.PACKAGE_NAME
     compileSdk {
@@ -46,26 +60,13 @@ android {
         }
     }
 
-    val properties = Properties()
-    runCatching { project.rootProject.file("local.properties").reader(Charsets.UTF_8).use(properties::load) }
-    val keystorePath = properties.getProperty("KEYSTORE_PATH") ?: System.getenv("KEYSTORE_PATH")
-    val keystorePwd = properties.getProperty("KEYSTORE_PASS") ?: System.getenv("KEYSTORE_PASS")
-    val alias = properties.getProperty("KEY_ALIAS") ?: System.getenv("KEY_ALIAS")
-    val pwd = properties.getProperty("KEY_PASSWORD") ?: System.getenv("KEY_PASSWORD")
-    if (keystorePath != null) {
-        signingConfigs {
-            register("github") {
-                storeFile = file(keystorePath)
-                storePassword = keystorePwd
-                keyAlias = alias
-                keyPassword = pwd
-                enableV3Signing = true
-                enableV4Signing = true
-            }
-        }
-    } else {
+    if (releaseSigningConfigured) {
         signingConfigs {
             register("release") {
+                storeFile = file(keystorePath!!)
+                storePassword = keystorePwd
+                keyAlias = keystoreAlias
+                keyPassword = keyPwd
                 enableV3Signing = true
                 enableV4Signing = true
             }
@@ -78,10 +79,12 @@ android {
             isShrinkResources = true
             vcsInfo.include = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules-android.pro")
-            signingConfig = signingConfigs.getByName(if (keystorePath != null) "github" else "debug")
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
-            if (keystorePath != null) signingConfig = signingConfigs.getByName("github")
+            if (releaseSigningConfigured) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -127,3 +130,13 @@ androidComponents {
         }
     }
 }
+
+// Release packaging must not run without a real signing key: fail before the APK is produced
+// instead of emitting an unsigned artifact or silently reusing the debug key.
+val validateReleaseSigning = tasks.register<ValidateReleaseSigningTask>("validateReleaseSigning") {
+    description = "Fails when release signing inputs (keystore/alias/passwords) are missing."
+    configured.set(releaseSigningConfigured)
+}
+
+tasks.matching { it.name in setOf("packageRelease", "bundleRelease", "assembleRelease") }
+    .configureEach { dependsOn(validateReleaseSigning) }

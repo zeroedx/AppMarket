@@ -14,6 +14,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Repository
@@ -31,7 +33,34 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Decode Signing Key
-        run: echo ${{ secrets.SIGNING_KEY }} | base64 -d > keystore.jks
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SIGNING_KEY:-}" ]; then
+            echo "::error::Secret SIGNING_KEY is not set. Configure it with the base64 of the release keystore."
+            exit 1
+          fi
+          # Secrets are often pasted with surrounding quotes, spaces or CRLF line endings.
+          # Normalise the payload, then decode strictly: an invalid keystore must fail the job
+          # rather than silently produce an unsigned/debug-signed APK.
+          printf '%s' "$SIGNING_KEY" | tr -d '\r' | sed -e 's/^[[:space:]"'"'"']*//' -e 's/[[:space:]"'"'"']*$//' | tr -d '[:space:]' | base64 -d > keystore.jks
+          if [ ! -s keystore.jks ]; then
+            echo "::error::Decoded keystore is empty. Check that SIGNING_KEY contains the base64 of the .jks file."
+            exit 1
+          fi
+
+      - name: Verify Keystore
+        env:
+          KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_PASS:-}" ]; then echo "::error::Secret KEY_STORE_PASSWORD is not set."; exit 1; fi
+          if [ -z "${KEY_ALIAS:-}" ]; then echo "::error::Secret ALIAS is not set."; exit 1; fi
+          if [ -z "${KEY_PASSWORD:-}" ]; then echo "::error::Secret KEY_PASSWORD is not set."; exit 1; fi
+          keytool -list -keystore keystore.jks -storepass "$KEYSTORE_PASS" -alias "$KEY_ALIAS" > /dev/null
 
       - name: Build Release APK
         run: |
@@ -42,6 +71,20 @@ jobs:
           KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Verify APK Signature
+        run: |
+          set -euo pipefail
+          if [ -z "${APK_FILE:-}" ] || [ ! -f "$APK_FILE" ]; then
+            echo "::error::Release APK was not produced."
+            exit 1
+          fi
+          APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found in Android SDK build-tools."
+            exit 1
+          fi
+          "$APKSIGNER" verify --print-certs "$APK_FILE"
 
       - name: Upload APK Artifact
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
@@ -58,3 +101,7 @@ jobs:
           echo "| SHA256 | \`$(sha256sum "$APK_FILE" | awk '{ print $1 }')\` |" >> $GITHUB_STEP_SUMMARY
           echo "| SHA1 | \`$(sha1sum "$APK_FILE" | awk '{ print $1 }')\` |" >> $GITHUB_STEP_SUMMARY
           echo "| MD5 | \`$(md5sum "$APK_FILE" | awk '{ print $1 }')\` |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup Signing Key
+        if: always()
+        run: rm -f keystore.jks
