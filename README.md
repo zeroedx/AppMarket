@@ -139,7 +139,7 @@
 
 ---
 
-## 开源引用
+## 开源引用与致谢
 
 - [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) - JetBrains 推出的声明式跨平台 UI 框架
 - [miuix](https://github.com/compose-miuix-ui/miuix) - 遵循 MIUI / HyperOS 设计风格的 Compose Multiplatform UI 库
@@ -150,6 +150,7 @@
 - [HiddenApiBypass](https://github.com/LSPosed/AndroidHiddenApiBypass) - Android 非公开 API 限制绕过方案
 - [HDiffPatch](https://github.com/sisong/HDiffPatch) - 高性能差分与补丁还原库
 - [HyperNotification](https://github.com/xzakota/HyperNotification) - 小米澎湃焦点通知与超级岛适配支持
+- [HSSkyBoy/AppMarket](https://github.com/HSSkyBoy/AppMarket) - 移植了商店外链解析与剪贴板识别、Monet/AMOLED 主题色彩管线及多源分类浏览等核心功能，感谢原作者 @HSSkyBoy 的开源贡献。
 
 ---
 
